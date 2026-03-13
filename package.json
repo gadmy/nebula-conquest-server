@@ -1,0 +1,17 @@
+{
+  "name": "nebula-conquest-server",
+  "version": "1.0.0",
+  "description": "Serveur autoritaire Node.js pour Nebula Conquest (50 joueurs)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.7.2",
+    "@supabase/supabase-js": "^2.49.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
