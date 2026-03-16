@@ -499,11 +499,23 @@ class GameState {
     }
 
     // ── Stats fin de partie ──
-    getStats() {
-        return this.players.map(p => ({
-            slot: p.slot, name: p.name, color: p.color,
-            bodies: p.bodies.length, totalSpores: Math.floor(p.totalSpores || 0)
-        }));
+getStats() {
+        const bySlot = (field) => {
+            const obj = {};
+            for (const p of this.players) obj[p.slot] = p._stats?.[field] || 0;
+            return obj;
+        };
+        return {
+            timeElapsed:     this.time,
+            bodiesConquered: bySlot('bodiesConquered'),
+            jetsLaunched:    bySlot('jetsLaunched'),
+            jetsNeutralized: bySlot('jetsNeutralized'),
+            sporesProduced:  bySlot('sporesProduced'),
+            players: this.players.map(p => ({
+                slot: p.slot, name: p.name, color: p.color,
+                bodies: p.bodies.length, totalSpores: Math.floor(p.totalSpores || 0)
+            }))
+        };
     }
 }
 
