@@ -54,11 +54,12 @@ class GameState {
             color:       p.color,
             isHuman:     p.isHuman,
             isAI:        !p.isHuman,
-            spawnPlanet: null,
+spawnPlanet: null,
             bodies:      [],
             totalSpores: 0,
             stats: { growth: 0, velocity: 0, density: 0 },
-            tech:  {}
+            tech:  {},
+            _stats: { bodiesConquered: 0, jetsLaunched: 0, jetsNeutralized: 0, sporesProduced: 0 }
         }));
     }
 
@@ -376,6 +377,8 @@ class GameState {
                 if (np && !np.bodies.includes(body)) np.bodies.push(body);
                 const sunRef = body.type === 'planet' ? body.parent : body.parent?.parent;
                 if (sunRef) sunRef._sysCache = null;
+const np2 = this.players[jet.owner];
+                if (np2?._stats) np2._stats.bodiesConquered++;
                 this._addEvent('conquest', {
                     bodyName: body.name, oldOwner, newOwner: jet.owner
                 });
