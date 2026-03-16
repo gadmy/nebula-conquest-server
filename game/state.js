@@ -413,7 +413,7 @@ const np2 = this.players[jet.owner];
         const target = this._findTarget(source, dirX, dirY);
         if (!target) { source.spores += spores; return false; }
 
-        this.jets.push({
+this.jets.push({
             id: Date.now() + Math.random(),
             owner: slot, color: player.color,
             spores, sporeType,
@@ -421,6 +421,7 @@ const np2 = this.players[jet.owner];
             speed, target, source,
             alive: true, age: 0
         });
+        if (player._stats) player._stats.jetsLaunched++;
         return true;
     }
 
