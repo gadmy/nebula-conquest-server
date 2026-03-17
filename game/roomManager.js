@@ -140,19 +140,60 @@ class Room {
             }
         }, this.tickMs);
     }
-
-    // ── Fin de partie ──
-    _endGame(winnerSlot) {
+// ── Fin de partie ──
+    async _endGame(winnerSlot) {
         this.phase = 'end';
         clearInterval(this.tickTimer);
         const winner = this.players.find(p => p.slot === winnerSlot);
+        const stats = this.state.getStats();
+
+        // ── Calcul ELO ──
+        let eloResults = [];
+        if (this.supa && this.computeElo) {
+            try {
+                // Récupérer les ELO actuels depuis Supabase
+                const humanPlayers = this.players.filter(p => p.socket.userId);
+                const userIds = humanPlayers.map(p => p.socket.userId);
+                const { data: profiles } = await this.supa
+                    .from('profiles').select('id, elo').in('id', userIds);
+
+                if (profiles && humanPlayers.length >= 2) {
+                    // Rang : winnerSlot = rank 1, les autres classés par nb d'astres
+                    const ranked = [...humanPlayers].sort((a, b) => {
+                        if (a.slot === winnerSlot) return -1;
+                        if (b.slot === winnerSlot) return 1;
+                        const ba = stats.players.find(p => p.slot === a.slot)?.bodies || 0;
+                        const bb = stats.players.find(p => p.slot === b.slot)?.bodies || 0;
+                        return bb - ba;
+                    });
+
+                    const eloInput = ranked.map((p, i) => {
+                        const profile = profiles.find(pr => pr.id === p.socket.userId);
+                        return { userId: p.socket.userId, elo: profile?.elo || 1000, rank: i + 1 };
+                    });
+
+                    eloResults = this.computeElo(eloInput);
+
+                    // Écrire les nouveaux ELO dans Supabase
+                    for (const r of eloResults) {
+                        await this.supa.from('profiles')
+                            .update({ elo: r.newElo })
+                            .eq('id', r.userId);
+                    }
+                    console.log(`[room:${this.id}] ELO mis à jour :`, eloResults.map(r => `${r.userId} ${r.delta > 0 ? '+' : ''}${r.delta}`).join(', '));
+                }
+            } catch(e) {
+                console.error(`[room:${this.id}] Erreur calcul ELO:`, e.message);
+            }
+        }
+
         this.io.to(this.id).emit('game_end', {
             winnerSlot,
             winnerName: winner?.pseudo || 'Inconnu',
-            stats: this.state.getStats()
+            stats,
+            eloResults: eloResults.map(r => ({ userId: r.userId, delta: r.delta, newElo: r.newElo }))
         });
         console.log(`[room:${this.id}] fin de partie — gagnant : ${winner?.pseudo}`);
-        // Nettoyer après 60s
         setTimeout(() => this.destroy(), 60000);
     }
 
