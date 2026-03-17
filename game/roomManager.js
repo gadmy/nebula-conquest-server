@@ -263,11 +263,13 @@ addPlayer(socket) {
             roomId:  this.id,
             phase:   this.phase,
             players: this.players.map(p => ({
-                slot:   p.slot,
-                pseudo: p.pseudo,
-                color:  p.color,
-                ready:  p.ready,
-                alive:  p.alive
+                slot:     p.slot,
+                pseudo:   p.pseudo,
+                color:    p.color,
+                ready:    p.ready,
+                alive:    p.alive,
+                guildTag: p.guildTag || null,
+                guildId:  p.guildId  || null
             }))
         };
     }
