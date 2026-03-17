@@ -33,7 +33,7 @@ const io = new Server(httpServer, {
     pingInterval: 5000
 });
 
-const rooms = new RoomManager(io, MAX_PLAYERS, TICK_RATE);
+const rooms = new RoomManager(io, MAX_PLAYERS, TICK_RATE, supa, computeElo);
 
 // ── Vérification JWT Supabase ──
 async function verifyToken(token) {
