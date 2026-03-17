@@ -310,6 +310,12 @@ class RoomManager {
         return socket.roomId ? this.rooms.get(socket.roomId) : null;
     }
 
+// ── Vote bots ──
+    voteBots(socket) {
+        const room = this.getRoomOf(socket);
+        if (room) room.addBotVote(socket);
+    }
+
     // ── Liste publique ──
     getPublicList() {
         return Array.from(this.rooms.values())
