@@ -7,6 +7,7 @@ const http    = require('http');
 const { Server } = require('socket.io');
 const { createClient } = require('@supabase/supabase-js');
 const RoomManager = require('./game/roomManager');
+const { computeElo } = require('./game/state');
 
 // ── Config ──
 const PORT               = process.env.PORT || 3000;
