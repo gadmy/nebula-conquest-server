@@ -374,7 +374,10 @@ class RoomManager {
             // Créer une nouvelle room
             const roomId = 'room-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
            room = new Room(roomId, this.io, this.maxPlayers, this.tickRate, this.supa, this.computeElo);
-            if (data?.config) room.config = { ...room.config, ...data.config };
+          if (data?.config) {
+                room.config = { ...room.config, ...data.config };
+                if (data.config.teamCount) room.config.teamCount = parseInt(data.config.teamCount) || 0;
+            }
             this.rooms.set(roomId, room);
         }
 
