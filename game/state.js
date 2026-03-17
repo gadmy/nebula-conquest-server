@@ -489,15 +489,40 @@ this.jets.push({
         return { tick, time: this.time, bodies, jets, events };
     }
 
-    // ── Victoire ──
+  // ── Victoire solo ──
     checkVictory() {
         const living = this.players.filter(p => p.bodies.length > 0);
         if (living.length === 1) return living[0].slot;
         if (living.length === 0) return 0;
-        // 80% des corps
         const total = this.allBodies.length;
         for (const p of living) {
             if (p.bodies.length >= total * 0.8) return p.slot;
+        }
+        return null;
+    }
+
+    // ── Victoire équipes ──
+    checkTeamVictory(teamCount) {
+        const total = this.allBodies.length;
+        const teamBodies = {};
+        for (let t = 0; t < teamCount; t++) teamBodies[t] = 0;
+        for (const p of this.players) {
+            const team = p.team ?? p.slot;
+            if (teamBodies[team] !== undefined) teamBodies[team] += p.bodies.length;
+        }
+        for (let t = 0; t < teamCount; t++) {
+            if (teamBodies[t] >= total * 0.8) {
+                // Retourner le slot du premier joueur de cette équipe
+                const winner = this.players.find(p => (p.team ?? p.slot) === t);
+                return winner ? winner.slot : 0;
+            }
+        }
+        // Une seule équipe encore en vie ?
+        const aliveTeams = new Set(this.players.filter(p => p.bodies.length > 0).map(p => p.team ?? p.slot));
+        if (aliveTeams.size === 1) {
+            const winTeam = [...aliveTeams][0];
+            const winner = this.players.find(p => (p.team ?? p.slot) === winTeam);
+            return winner ? winner.slot : 0;
         }
         return null;
     }
