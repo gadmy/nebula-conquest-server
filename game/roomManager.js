@@ -188,6 +188,52 @@ addPlayer(socket) {
             }
         }
 
+        // ── Calcul ELO Guildes ──
+        if (this.supa && this.computeElo) {
+            try {
+                // Grouper les joueurs humains par guilde
+                const guildGroups = {};
+                for (const p of this.players) {
+                    if (!p.guildId) continue;
+                    if (!guildGroups[p.guildId]) guildGroups[p.guildId] = [];
+                    guildGroups[p.guildId].push(p);
+                }
+                const guildIds = Object.keys(guildGroups);
+                // Minimum 2 guildes différentes pour calculer l'ELO
+                if (guildIds.length >= 2) {
+                    const { data: guilds } = await this.supa
+                        .from('guilds').select('id, elo').in('id', guildIds);
+                    if (guilds) {
+                        // Score de chaque guilde = moyenne des rangs de ses membres
+                        const guildRanks = guildIds.map(guildId => {
+                            const members = guildGroups[guildId];
+                            const avgBodies = members.reduce((sum, p) => {
+                                return sum + (stats.players.find(sp => sp.slot === p.slot)?.bodies || 0);
+                            }, 0) / members.length;
+                            const guild = guilds.find(g => g.id === guildId);
+                            return { guildId, elo: guild?.elo || 1000, avgBodies };
+                        });
+                        // Trier par avgBodies décroissant → rank
+                        guildRanks.sort((a, b) => b.avgBodies - a.avgBodies);
+                        // Vérifier si la guilde du gagnant est dans le classement
+                        const winnerGuildId = this.players.find(p => p.slot === winnerSlot)?.guildId;
+                        if (winnerGuildId) {
+                            const wi = guildRanks.findIndex(g => g.guildId === winnerGuildId);
+                            if (wi > 0) { const tmp = guildRanks[0]; guildRanks[0] = guildRanks[wi]; guildRanks[wi] = tmp; }
+                        }
+                        const eloGuildInput = guildRanks.map((g, i) => ({ userId: g.guildId, elo: g.elo, rank: i + 1 }));
+                        const eloGuildResults = this.computeElo(eloGuildInput);
+                        for (const r of eloGuildResults) {
+                            await this.supa.from('guilds').update({ elo: r.newElo }).eq('id', r.userId);
+                        }
+                        console.log(`[room:${this.id}] ELO guildes mis à jour :`, eloGuildResults.map(r => `${r.userId} ${r.delta > 0 ? '+' : ''}${r.delta}`).join(', '));
+                    }
+                }
+            } catch(e) {
+                console.error(`[room:${this.id}] Erreur ELO guildes:`, e.message);
+            }
+        }
+
         this.io.to(this.id).emit('game_end', {
             winnerSlot,
             winnerName: winner?.pseudo || 'Inconnu',
