@@ -54,6 +54,8 @@ io.on('connection', async (socket) => {
     socket.userId    = user?.id    || socket.id;
     socket.userName  = socket.handshake.auth?.pseudo || 'Joueur-' + socket.id.slice(0,4);
     socket.userColor = socket.handshake.auth?.color  || '#C084FC';
+    socket.guildTag  = socket.handshake.auth?.guildTag || null;
+    socket.guildId   = socket.handshake.auth?.guildId  || null;
 
     socket.on('lobby_list',    ()     => socket.emit('lobby_list', rooms.getPublicList()));
     socket.on('join_room',     (data) => {
