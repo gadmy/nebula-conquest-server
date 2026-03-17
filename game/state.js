@@ -523,4 +523,38 @@ getStats() {
     }
 }
 
-module.exports = GameState;
+// ── Calcul ELO multi-joueurs ──
+function computeElo(players, kFactor = 32) {
+    // players = [{ userId, elo, rank }] rank 1 = gagnant
+    // Filtre : humains uniquement, avec userId
+    const humans = players.filter(p => p.userId && p.elo !== undefined);
+    if (humans.length < 2) return []; // pas assez d'humains
+
+    const updates = humans.map(p => ({ userId: p.userId, delta: 0 }));
+
+    // Chaque paire
+    for (let i = 0; i < humans.length; i++) {
+        for (let j = i + 1; j < humans.length; j++) {
+            const a = humans[i], b = humans[j];
+            // Score réel : 1 si a mieux classé, 0 sinon, 0.5 si égal
+            const scoreA = a.rank < b.rank ? 1 : a.rank > b.rank ? 0 : 0.5;
+            const scoreB = 1 - scoreA;
+            // Score attendu
+            const expA = 1 / (1 + Math.pow(10, (b.elo - a.elo) / 400));
+            const expB = 1 - expA;
+            // Delta
+            updates[i].delta += Math.round(kFactor * (scoreA - expA));
+            updates[j].delta += Math.round(kFactor * (scoreB - expB));
+        }
+    }
+
+    // Moyenner le delta par nb de matchups (n-1)
+    const n = humans.length - 1;
+    return updates.map(u => ({
+        userId: u.userId,
+        delta: Math.round(u.delta / n),
+        newElo: Math.max(100, humans.find(h => h.userId === u.userId).elo + Math.round(u.delta / n))
+    }));
+}
+
+module.exports = { GameState, computeElo };
