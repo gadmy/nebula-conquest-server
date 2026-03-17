@@ -150,7 +150,9 @@ addPlayer(socket) {
 
             // Vérifier victoire toutes les 60 ticks (~3s)
             if (this.tick % 60 === 0) {
-                const winner = this.state.checkVictory();
+                const winner = this.config.teamCount >= 2
+                    ? this.state.checkTeamVictory(this.config.teamCount)
+                    : this.state.checkVictory();
                 if (winner !== null) this._endGame(winner);
             }
         }, this.tickMs);
