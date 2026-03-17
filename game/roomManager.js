@@ -211,10 +211,12 @@ class Room {
 // ROOM MANAGER
 // ═══════════════════════════════════════════════════════════════
 class RoomManager {
-    constructor(io, maxPlayers, tickRate) {
+    constructor(io, maxPlayers, tickRate, supa, computeElo) {
         this.io         = io;
         this.maxPlayers = maxPlayers;
         this.tickRate   = tickRate;
+        this.supa       = supa;
+        this.computeElo = computeElo;
         this.rooms      = new Map(); // roomId → Room
     }
 
