@@ -216,6 +216,39 @@ class Room {
         }
     }
 
+// ── Vote bots ──
+    addBotVote(socket) {
+        if (this.phase !== 'lobby') return;
+        if (!this._botVotes) this._botVotes = new Set();
+        if (this._countdownStarted) return; // countdown déjà lancé, vote ignoré
+        this._botVotes.add(socket.id);
+        const total = this.players.length;
+        const votes = this._botVotes.size;
+        // Majorité : au moins 2 votes ET >50% des joueurs présents
+        if (votes >= 2 && votes > total / 2) {
+            this._startBotCountdown();
+        } else {
+            this.io.to(this.id).emit('bot_vote_update', { votes, total });
+        }
+    }
+
+    // ── Countdown bots ──
+    _startBotCountdown() {
+        if (this._countdownStarted) return;
+        this._countdownStarted = true;
+        let remaining = 30;
+        this.io.to(this.id).emit('bot_countdown', { remaining });
+        this._countdownTimer = setInterval(() => {
+            remaining--;
+            this.io.to(this.id).emit('bot_countdown', { remaining });
+            if (remaining <= 0) {
+                clearInterval(this._countdownTimer);
+                // Lancer la partie — les slots vides seront complétés par IA côté client
+                this._finishSpawn();
+            }
+        }, 1000);
+    }
+
     // ── Détruire la room ──
     destroy() {
         clearInterval(this.tickTimer);
