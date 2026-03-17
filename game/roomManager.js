@@ -5,7 +5,8 @@
 const GameState = require('./state');
 const { applyAction } = require('./actions');
 
-constructor(id, io, maxPlayers, tickRate, supa, computeElo) {
+class Room {
+    constructor(id, io, maxPlayers, tickRate, supa, computeElo) {
         this.id         = id;
         this.io         = io;
         this.maxPlayers = maxPlayers;
