@@ -87,9 +87,23 @@ addPlayer(socket) {
         this.phase = 'spawn';
 
         // Créer l'état de jeu avec les joueurs actuels
-      const playerDefs = this.players.map(p => ({
+     // ── Assignation aléatoire des équipes ──
+        const teamCount = this.config.teamCount || 0; // 0 = chacun pour soi
+        const shuffled = [...this.players].sort(() => Math.random() - 0.5);
+        const teamColors = ['#60A5FA', '#F87171', '#4ADE80', '#FBBF24'];
+        if (teamCount >= 2) {
+            shuffled.forEach((p, i) => {
+                p.team = i % teamCount;
+                p.teamColor = teamColors[p.team % teamColors.length];
+            });
+        } else {
+            this.players.forEach(p => { p.team = p.slot; p.teamColor = null; });
+        }
+
+        const playerDefs = this.players.map(p => ({
             slot: p.slot, pseudo: p.pseudo, color: p.color, isHuman: true,
-            guildTag: p.guildTag || null, guildId: p.guildId || null
+            guildTag: p.guildTag || null, guildId: p.guildId || null,
+            team: p.team ?? p.slot, teamColor: p.teamColor || null
         }));
         this.state = new GameState(playerDefs, this.config);
         this.state.generateUniverse();
