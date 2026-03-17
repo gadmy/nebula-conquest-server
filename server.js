@@ -64,6 +64,7 @@ io.on('connection', async (socket) => {
     socket.on('leave_room',    ()     => rooms.leave(socket));
     socket.on('player_ready',  (data) => rooms.setReady(socket, data?.ready !== false));
     socket.on('player_action', (data) => rooms.handleAction(socket, data));
+    socket.on('vote_bots', () => rooms.voteBots(socket));
     socket.on('chat', (data) => {
         const room = rooms.getRoomOf(socket);
         if (!room) return;
