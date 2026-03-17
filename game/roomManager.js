@@ -5,13 +5,14 @@
 const GameState = require('./state');
 const { applyAction } = require('./actions');
 
-class Room {
-    constructor(id, io, maxPlayers, tickRate) {
+constructor(id, io, maxPlayers, tickRate, supa, computeElo) {
         this.id         = id;
         this.io         = io;
         this.maxPlayers = maxPlayers;
         this.tickRate   = tickRate;
         this.tickMs     = Math.floor(1000 / tickRate);
+        this.supa       = supa;
+        this.computeElo = computeElo;
 
         this.players    = [];   // [{ socket, slot, pseudo, color, ready, alive }]
         this.phase      = 'lobby'; // lobby | spawn | game | end
