@@ -33,9 +33,9 @@ class Room {
     get isEmpty()     { return this.players.length === 0; }
 
     // ── Ajouter un joueur ──
-    addPlayer(socket) {
+addPlayer(socket) {
         const slot = this.players.length;
-        const p = { socket, slot, pseudo: socket.userName, color: socket.userColor, ready: false, alive: true };
+        const p = { socket, slot, pseudo: socket.userName, color: socket.userColor, guildTag: socket.guildTag || null, guildId: socket.guildId || null, ready: false, alive: true };
         this.players.push(p);
         socket.join(this.id);
         socket.roomId = this.id;
