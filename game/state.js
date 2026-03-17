@@ -344,10 +344,16 @@ spawnPlanet: null,
         }
     }
 
-    // ── Arrivée d'un jet sur un corps ──
+  // ── Arrivée d'un jet sur un corps ──
     _jetArrival(jet, body) {
-        if (body.owner === jet.owner) {
-            // Renforcement
+        const ownerTeam = this.players[jet.owner]?.team ?? jet.owner;
+        const bodyOwnerTeam = body.owner !== null && body.owner !== undefined
+            ? (this.players[body.owner]?.team ?? body.owner) : null;
+        const isTeammate = body.owner !== null && body.owner !== undefined
+            && body.owner !== jet.owner && ownerTeam === bodyOwnerTeam;
+
+        if (body.owner === jet.owner || isTeammate) {
+            // Renforcement (coéquipier ou soi-même)
             const db = 1 + (this.players[jet.owner]?.stats?.density || 0) * 0.05;
             body.spores = Math.min(body.maxSpores, (body.spores||0) + jet.spores * db);
         } else {
