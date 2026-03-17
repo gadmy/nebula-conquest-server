@@ -87,8 +87,9 @@ addPlayer(socket) {
         this.phase = 'spawn';
 
         // Créer l'état de jeu avec les joueurs actuels
-        const playerDefs = this.players.map(p => ({
-            slot: p.slot, pseudo: p.pseudo, color: p.color, isHuman: true
+      const playerDefs = this.players.map(p => ({
+            slot: p.slot, pseudo: p.pseudo, color: p.color, isHuman: true,
+            guildTag: p.guildTag || null, guildId: p.guildId || null
         }));
         this.state = new GameState(playerDefs, this.config);
         this.state.generateUniverse();
