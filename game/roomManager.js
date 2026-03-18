@@ -261,7 +261,16 @@ addPlayer(socket) {
     }
 
     // ── Action joueur ──
-    handleAction(socket, data) {
+handleAction(socket, data) {
+        // Rate limiting : max 20 actions/seconde par joueur
+        const now = Date.now();
+        const p = this.players.find(p => p.socket.id === socket.id);
+        if (p) {
+            if (!p._lastAction) p._lastAction = 0;
+            if (now - p._lastAction < 50) return; // 50ms = 20 actions/s max
+            p._lastAction = now;
+        }
+
         if (this.phase === 'spawn' && data?.type === 'choose_spawn') {
             const ok = this.state.chooseSpawn(socket.slot, data.bodyName);
             if (ok) {
