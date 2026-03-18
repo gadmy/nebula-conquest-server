@@ -24,8 +24,10 @@ function applyAction(state, slot, data) {
             return actionSetBuildMode(state, slot, data);
         case 'cancel_build':
             return actionCancelBuild(state, slot, data);
-        case 'multi':
+case 'multi':
             return actionMulti(state, slot, data);
+        case 'set_sacrifice':
+            return actionSetSacrifice(state, slot, data);
         default:
             return [];
     }
@@ -97,6 +99,17 @@ function actionMulti(state, slot, data) {
     player._multiPending = false;
     player.stats[stat] = Math.min(5, (player.stats[stat] || 0) + 1); // cap à 5
     return [{ type: 'multi_applied', slot, stat }];
+}
+
+// ── Régler le sacrifice multiplicité ──
+// data : { value } — 0 à 50
+function actionSetSacrifice(state, slot, data) {
+    const value = parseInt(data.value);
+    if (!isFinite(value)) return [];
+    const player = state.players[slot];
+    if (!player) return [];
+    player.multiSacrifice = Math.max(0, Math.min(50, value)); // cap 0-50%
+    return [];
 }
 
 module.exports = { applyAction };
