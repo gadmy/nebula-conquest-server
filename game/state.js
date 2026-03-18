@@ -513,11 +513,20 @@ this.jets.push({
             targetId: j.target?._id
         }));
 
+// Données joueurs (multiPending, stats)
+        const players = this.players.map(p => ({
+            slot:          p.slot,
+            multiTier:     p.multiTier     || 0,
+            multiProgress: Math.floor(p.multiProgress || 0),
+            _multiPending: p._multiPending || false,
+            stats:         { ...p.stats }
+        }));
+
         // Events depuis le dernier tick
         const events = [...this._events];
         this._events = [];
 
-        return { tick, time: this.time, bodies, jets, events };
+        return { tick, time: this.time, bodies, jets, players, events };
     }
 
   // ── Victoire solo ──
