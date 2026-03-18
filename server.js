@@ -23,8 +23,26 @@ const supa = SUPABASE_KEY
 
 // ── HTTP + socket.io ──
 const httpServer = http.createServer((req, res) => {
-    if (req.url === '/health') { res.writeHead(200); res.end('ok'); }
-    else { res.writeHead(404); res.end('Nebula Conquest Server'); }
+    if (req.url === '/health') {
+        res.writeHead(200); res.end('ok');
+    } else if (req.url === '/stats') {
+        const mem = process.memoryUsage();
+        const activeRooms = Array.from(rooms.rooms.values());
+        const stats = {
+            uptime_s:       Math.floor(process.uptime()),
+            memory_mb:      Math.round(mem.heapUsed / 1024 / 1024),
+            memory_total_mb:Math.round(mem.heapTotal / 1024 / 1024),
+            rooms_total:    activeRooms.length,
+            rooms_lobby:    activeRooms.filter(r => r.phase === 'lobby').length,
+            rooms_game:     activeRooms.filter(r => r.phase === 'game').length,
+            rooms_end:      activeRooms.filter(r => r.phase === 'end').length,
+            players_connected: io.engine.clientsCount,
+        };
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(stats, null, 2));
+    } else {
+        res.writeHead(404); res.end('Nebula Conquest Server');
+    }
 });
 
 const io = new Server(httpServer, {
@@ -86,4 +104,21 @@ httpServer.listen(PORT, () => {
     console.log(`Nebula Conquest Server — port ${PORT}`);
     console.log(`Supabase : ${supa ? 'connecté' : 'mode dev (pas de vérif JWT)'}`);
     console.log(`Max joueurs/room : ${MAX_PLAYERS} | Tick rate : ${TICK_RATE}Hz`);
+
+    // Log de santé toutes les 5 minutes
+    setInterval(() => {
+        const mem = process.memoryUsage();
+        const activeRooms = Array.from(rooms.rooms.values());
+        const inGame = activeRooms.filter(r => r.phase === 'game').length;
+        const players = io.engine.clientsCount;
+        const memMb = Math.round(mem.heapUsed / 1024 / 1024);
+        console.log(`[health] ${new Date().toISOString()} | RAM: ${memMb}MB | rooms: ${activeRooms.length} (${inGame} en jeu) | joueurs: ${players}`);
+    }, 5 * 60 * 1000);
 });
+```
+
+---
+
+Une fois déployé sur Railway, tu peux voir les stats en temps réel en ouvrant :
+```
+https://nebula-conquest-server-production.up.railway.app/stats
