@@ -59,7 +59,11 @@ spawnPlanet: null,
             totalSpores: 0,
             stats: { growth: 0, velocity: 0, density: 0 },
             tech:  {},
-            _stats: { bodiesConquered: 0, jetsLaunched: 0, jetsNeutralized: 0, sporesProduced: 0 }
+_stats: { bodiesConquered: 0, jetsLaunched: 0, jetsNeutralized: 0, sporesProduced: 0 },
+            multiTier: 0,
+            multiProgress: 0,
+            multiSacrifice: 0,
+            _multiPending: false
         }));
     }
 
@@ -309,6 +313,27 @@ spawnPlanet: null,
                 }
             }
 
+// Progression Prolifération
+            const multiSac = player.multiSacrifice || 0;
+            if (multiSac > 0 && (player.multiTier || 0) < 10) {
+                const multiRate = rate * multiSac;
+                player.multiProgress = (player.multiProgress || 0) + multiRate * dt;
+                const tierCost = Math.floor(500 * Math.pow(1.8, player.multiTier || 0));
+                if (player.multiProgress >= tierCost) {
+                    player.multiProgress -= tierCost;
+                    if (player.isHuman) {
+                        player._multiPending = true;
+                    } else {
+                        // IA : boost le stat le plus faible
+                        const s = player.stats;
+                        const min = Math.min(s.growth, s.velocity, s.density);
+                        if (s.growth === min) s.growth = Math.min(5, s.growth + 1);
+                        else if (s.density === min) s.density = Math.min(5, s.density + 1);
+                        else s.velocity = Math.min(5, s.velocity + 1);
+                        player.multiTier++;
+                    }
+                }
+            }
             // totalSpores
             player.totalSpores = (player.totalSpores || 0); // recalc ci-dessous
         }
