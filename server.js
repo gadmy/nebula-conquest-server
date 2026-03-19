@@ -105,7 +105,7 @@ httpServer.listen(PORT, () => {
     console.log(`Supabase : ${supa ? 'connecté' : 'mode dev (pas de vérif JWT)'}`);
     console.log(`Max joueurs/room : ${MAX_PLAYERS} | Tick rate : ${TICK_RATE}Hz`);
 
-    // Log de santé toutes les 5 minutes
+// Log de santé toutes les 5 minutes
     setInterval(() => {
         const mem = process.memoryUsage();
         const activeRooms = Array.from(rooms.rooms.values());
@@ -114,4 +114,23 @@ httpServer.listen(PORT, () => {
         const memMb = Math.round(mem.heapUsed / 1024 / 1024);
         console.log(`[health] ${new Date().toISOString()} | RAM: ${memMb}MB | rooms: ${activeRooms.length} (${inGame} en jeu) | joueurs: ${players}`);
     }, 5 * 60 * 1000);
+
+    // Nettoyage automatique des rooms Supabase abandonnées toutes les 30 minutes
+    if (supa) {
+        setInterval(async () => {
+            try {
+                const cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 heure
+                const { data: oldRooms } = await supa.from('game_rooms')
+                    .select('id').eq('status', 'waiting').lt('created_at', cutoff);
+                if (oldRooms && oldRooms.length > 0) {
+                    const ids = oldRooms.map(r => r.id);
+                    await supa.from('game_room_players').delete().in('room_id', ids);
+                    await supa.from('game_rooms').delete().in('id', ids);
+                    console.log(`[cleanup] ${oldRooms.length} room(s) abandonnée(s) supprimée(s)`);
+                }
+            } catch(e) {
+                console.warn('[cleanup] Erreur nettoyage rooms:', e.message);
+            }
+        }, 30 * 60 * 1000);
+    }
 });
