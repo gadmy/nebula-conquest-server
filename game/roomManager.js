@@ -450,6 +450,29 @@ class RoomManager {
         if (room) room.addBotVote(socket);
     }
 
+// ── Trouver ou créer une room auto ──
+    findOrCreate(socket, config) {
+        // Chercher une room auto en lobby avec de la place
+        for (const room of this.rooms.values()) {
+            if (room.phase === 'lobby' && !room.isFull && room._isAuto) {
+                const slot = room.addPlayer(socket);
+                socket.roomId = room.id;
+                return { roomId: room.id, slot };
+            }
+        }
+        // Aucune dispo → créer une nouvelle room auto
+        const roomId = 'auto-' + Date.now() + '-' + Math.floor(Math.random() * 9999);
+        const room = new Room(roomId, this.io, this.maxPlayers, this.tickRate, this.supa, this.computeElo);
+        if (config) {
+            room.config = { ...room.config, ...config };
+        }
+        room._isAuto = true;
+        this.rooms.set(roomId, room);
+        const slot = room.addPlayer(socket);
+        socket.roomId = room.id;
+        return { roomId: room.id, slot };
+    }
+
     // ── Liste publique ──
     getPublicList() {
         return Array.from(this.rooms.values())
