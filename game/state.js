@@ -166,6 +166,33 @@ _stats: { bodiesConquered: 0, jetsLaunched: 0, jetsNeutralized: 0, sporesProduce
         console.log(`[state] univers généré : ${this.suns.length} soleils, ${this.planets.length} planètes, ${this.moons.length} lunes`);
     }
 
+// ── Charger un univers sérialisé (envoyé par l'hôte) ──
+    loadUniverse(data) {
+        this.blackHole = data.blackHole;
+        this.suns = [];
+        this.planets = [];
+        this.moons = [];
+        let bodyId = 0;
+        for (const sd of data.suns) {
+            const sun = { ...sd, _id: bodyId++, type: 'sun', planets: [], parent: null, owner: null, spores: 0, maxSpores: 0 };
+            for (const pd of sd.planets) {
+                const planet = { ...pd, _id: bodyId++, type: 'planet', parent: sun, moons: [], owner: null, spores: 0, buildMode: 'off', buildProgress: 0, nids: 0, biomes: 0, alveoles: 0 };
+                planet.baseMaxSpores = planet.maxSpores;
+                for (const md of (pd.moons || [])) {
+                    const moon = { ...md, _id: bodyId++, type: 'moon', parent: planet, owner: null, spores: 0, buildMode: 'off', buildProgress: 0, nids: 0, biomes: 0, alveoles: 0 };
+                    moon.baseMaxSpores = moon.maxSpores;
+                    planet.moons.push(moon);
+                    this.moons.push(moon);
+                }
+                sun.planets.push(planet);
+                this.planets.push(planet);
+            }
+            this.suns.push(sun);
+        }
+        this.allBodies = [...this.planets, ...this.moons];
+        console.log(`[state] univers chargé depuis hôte : ${this.suns.length} soleils, ${this.planets.length} planètes, ${this.moons.length} lunes`);
+    }
+
     // ── Sérialiser l'univers pour le client ──
     serializeUniverse() {
         const serBody = (b) => ({
