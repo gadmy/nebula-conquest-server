@@ -70,15 +70,34 @@ addPlayer(socket) {
         }
     }
 
-    // ── Marquer prêt ──
+// ── Marquer prêt ──
     setReady(socket, ready) {
         const p = this.players.find(p => p.socket.id === socket.id);
         if (p) p.ready = ready;
         this.io.to(this.id).emit('room_state', this._roomState());
-        // Si tous prêts → démarrer
+        // Si tous prêts → attendre l'univers puis démarrer
         if (this.players.length >= 1 && this.players.every(p => p.ready)) {
-            this._startSpawn();
+            this._waitForUniverseThenSpawn();
         }
+    }
+
+    // ── Attendre l'univers de l'hôte (max 5s) avant de démarrer ──
+    _waitForUniverseThenSpawn() {
+        if (this._pendingUniverse) {
+            this._startSpawn();
+            return;
+        }
+        let attempts = 0;
+        const check = setInterval(() => {
+            attempts++;
+            if (this._pendingUniverse) {
+                clearInterval(check);
+                this._startSpawn();
+            } else if (attempts >= 50) { // 5s max
+                clearInterval(check);
+                this._startSpawn(); // démarrer quand même sans univers hôte
+            }
+        }, 100);
     }
 
     // ── Phase spawn ──
