@@ -76,10 +76,16 @@ io.on('connection', async (socket) => {
     socket.guildId   = socket.handshake.auth?.guildId  || null;
 
     socket.on('lobby_list',    ()     => socket.emit('lobby_list', rooms.getPublicList()));
-    socket.on('join_room',     (data) => {
+socket.on('join_room',     (data) => {
         const result = rooms.join(socket, data);
         if (result.error) socket.emit('error', { msg: result.error });
         else socket.emit('room_joined', { roomId: result.roomId, slot: result.slot });
+    });
+    socket.on('send_universe', (data) => {
+        const room = rooms.getRoomOf(socket);
+        if (room && data?.universe) {
+            room._pendingUniverse = data.universe;
+        }
     });
     socket.on('leave_room',    ()     => rooms.leave(socket));
     socket.on('player_ready',  (data) => rooms.setReady(socket, data?.ready !== false));
