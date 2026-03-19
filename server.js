@@ -115,10 +115,3 @@ httpServer.listen(PORT, () => {
         console.log(`[health] ${new Date().toISOString()} | RAM: ${memMb}MB | rooms: ${activeRooms.length} (${inGame} en jeu) | joueurs: ${players}`);
     }, 5 * 60 * 1000);
 });
-```
-
----
-
-Une fois déployé sur Railway, tu peux voir les stats en temps réel en ouvrant :
-```
-https://nebula-conquest-server-production.up.railway.app/stats
