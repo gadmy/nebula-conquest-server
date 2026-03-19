@@ -105,8 +105,13 @@ addPlayer(socket) {
             guildTag: p.guildTag || null, guildId: p.guildId || null,
             team: p.team ?? p.slot, teamColor: p.teamColor || null
         }));
-        this.state = new GameState(playerDefs, this.config);
-        this.state.generateUniverse();
+this.state = new GameState(playerDefs, this.config);
+        // Charger l'univers fourni par l'hôte (MAP_LIBRARY côté client)
+        if (this._pendingUniverse) {
+            this.state.loadUniverse(this._pendingUniverse);
+        } else {
+            this.state.generateUniverse();
+        }
 
         // Envoyer l'univers complet à tous
         this.io.to(this.id).emit('game_start', {
@@ -381,7 +386,7 @@ class RoomManager {
             if (room.phase !== 'lobby') return { error: 'Partie déjà commencée' };
         } else {
             // Créer une nouvelle room
-            const roomId = 'room-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+          const roomId = data?.roomId || ('room-' + Date.now() + '-' + Math.floor(Math.random() * 1000));
            room = new Room(roomId, this.io, this.maxPlayers, this.tickRate, this.supa, this.computeElo);
           if (data?.config) {
                 room.config = { ...room.config, ...data.config };
