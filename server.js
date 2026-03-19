@@ -87,6 +87,11 @@ socket.on('join_room',     (data) => {
             room._pendingUniverse = data.universe;
         }
     });
+socket.on('quick_match', (data) => {
+        if (socket.roomId) rooms.leave(socket);
+        const result = rooms.findOrCreate(socket, data?.config || {});
+        socket.emit('room_joined', { roomId: result.roomId, slot: result.slot });
+    });
     socket.on('leave_room',    ()     => rooms.leave(socket));
     socket.on('player_ready',  (data) => rooms.setReady(socket, data?.ready !== false));
     socket.on('player_action', (data) => rooms.handleAction(socket, data));
