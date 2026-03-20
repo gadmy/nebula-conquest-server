@@ -33,8 +33,8 @@ class Room {
     get isEmpty()     { return this.players.length === 0; }
 
     // ── Ajouter un joueur ──
-addPlayer(socket) {
-        const slot = this.players.length;
+addPlayer(socket, requestedSlot) {
+        const slot = (requestedSlot !== undefined && requestedSlot >= 0) ? requestedSlot : this.players.length;
         const p = { socket, slot, pseudo: socket.userName, color: socket.userColor, guildTag: socket.guildTag || null, guildId: socket.guildId || null, ready: false, alive: true };
         this.players.push(p);
         socket.join(this.id);
@@ -413,8 +413,7 @@ class RoomManager {
             }
             this.rooms.set(roomId, room);
         }
-
-        const slot = room.addPlayer(socket);
+const slot = room.addPlayer(socket, data?.slot);
         return { roomId: room.id, slot };
     }
 
