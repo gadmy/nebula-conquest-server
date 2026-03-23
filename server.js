@@ -81,13 +81,7 @@ io.on('connection', async (socket) => {
     socket.guildTag  = socket.handshake.auth?.guildTag || null;
     socket.guildId   = socket.handshake.auth?.guildId  || null;
 
-    socket.on('lobby_list',    ()     => socket.emit('lobby_list', rooms.getPublicList()));
-    _socket.on('room_joined', (data) => {
-        mySlot = data.slot;
-        isHost = (data.slot === 0);
-        currentRoom = { id: data.roomId, settings: { mode: 'auto' }, _railwaySlot: data.slot, _maxPlayers: data.maxPlayers, _mapIndex: data.mapIndex };
-        startQmPolling(data.roomId);
-    });
+socket.on('lobby_list',    ()     => socket.emit('lobby_list', rooms.getPublicList()));
     socket.on('send_universe', (data) => {
         const room = rooms.getRoomOf(socket);
         if (room && data?.universe) {
