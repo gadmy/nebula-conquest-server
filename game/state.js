@@ -219,8 +219,9 @@ generateUniverse() {
         return {
             seed:    this.seed,
             blackHole: this.blackHole,
-            suns: this.suns.map(s => ({
+        suns: this.suns.map(s => ({
                 ...serBody(s),
+                color: s.color || '#FFE44D',
                 planets: s.planets.map(p => ({
                     ...serBody(p),
                     moons: p.moons.map(m => serBody(m))
