@@ -2,7 +2,7 @@
 // ROOM MANAGER — Gestion des parties
 // ═══════════════════════════════════════════════════════════════
 
-const GameState = require('./state');
+const { GameState } = require('./state');
 const { applyAction } = require('./actions');
 
 class Room {
