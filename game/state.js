@@ -4,6 +4,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── PRNG déterministe (identique au client) ──
+const MAP_LIBRARY = require('./maps');
+
 function mulberry32(a) {
     return function() {
         a |= 0; a = a + 0x6D2B79F5 | 0;
@@ -68,10 +70,21 @@ _stats: { bodiesConquered: 0, jetsLaunched: 0, jetsNeutralized: 0, sporesProduce
     }
 
     // ── Génération univers (portage de generateUniverse()) ──
-    generateUniverse() {
+generateUniverse() {
+        // Utiliser la vraie MAP_LIBRARY comme le client
+        const mapIdx = (this.config.mapIndex != null)
+            ? this.config.mapIndex
+            : Math.floor(Math.random() * MAP_LIBRARY.length);
+        const mapData = MAP_LIBRARY[mapIdx];
+        this.config.mapIndex = mapIdx;
+        this.config.mapName  = mapData.name;
+        console.log(`[state] carte sélectionnée : ${mapData.name} (idx ${mapIdx})`);
+        this.loadUniverse(mapData);
+    }
+
+    _generateUniverseLegacy() {
         const rng = mulberry32(this.seed);
         const cfg = this.config;
-
         this.blackHole = { x: 0, y: 0, radius: 300, dangerZone: 300,
                            gravityRange: 1500, gravityStrength: 1260 };
 
