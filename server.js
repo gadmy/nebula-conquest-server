@@ -82,10 +82,11 @@ io.on('connection', async (socket) => {
     socket.guildId   = socket.handshake.auth?.guildId  || null;
 
     socket.on('lobby_list',    ()     => socket.emit('lobby_list', rooms.getPublicList()));
-socket.on('join_room',     (data) => {
-        const result = rooms.join(socket, data);
-        if (result.error) socket.emit('error', { msg: result.error });
-        else socket.emit('room_joined', { roomId: result.roomId, slot: result.slot });
+    _socket.on('room_joined', (data) => {
+        mySlot = data.slot;
+        isHost = (data.slot === 0);
+        currentRoom = { id: data.roomId, settings: { mode: 'auto' }, _railwaySlot: data.slot, _maxPlayers: data.maxPlayers, _mapIndex: data.mapIndex };
+        startQmPolling(data.roomId);
     });
     socket.on('send_universe', (data) => {
         const room = rooms.getRoomOf(socket);
