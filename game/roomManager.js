@@ -341,7 +341,7 @@ handleAction(socket, data) {
 _startBotCountdown() {
         if (this._countdownStarted) return;
         this._countdownStarted = true;
-        let remaining = 5;
+        let remaining = 30;
         this.io.to(this.id).emit('bot_countdown', { remaining });
         this._countdownTimer = setInterval(() => {
             remaining--;
