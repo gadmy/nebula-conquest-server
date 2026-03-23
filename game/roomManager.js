@@ -63,7 +63,7 @@ addPlayer(socket, requestedSlot) {
         socket.leave(this.id);
         socket.roomId = null;
 
-        if (this.isEmpty) {
+if (this.isEmpty && !this._isAuto) {
             this.destroy();
         } else {
             this.io.to(this.id).emit('room_state', this._roomState());
@@ -423,12 +423,12 @@ const slot = room.addPlayer(socket, data?.slot);
     }
 
     // ── Quitter ──
-    leave(socket) {
+leave(socket) {
         if (!socket.roomId) return;
         const room = this.rooms.get(socket.roomId);
         if (!room) return;
         room.removePlayer(socket);
-        if (room.isEmpty) this.rooms.delete(room.id);
+        if (room.isEmpty && !room._isAuto) this.rooms.delete(room.id);
     }
 
     // ── Action ──
