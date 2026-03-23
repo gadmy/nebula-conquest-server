@@ -25,6 +25,12 @@ const supa = SUPABASE_KEY
 const httpServer = http.createServer((req, res) => {
     if (req.url === '/health') {
         res.writeHead(200); res.end('ok');
+} else if (req.url === '/lobby') {
+        const lobbyRooms = Array.from(rooms.rooms.values())
+            .filter(r => r._isAuto && r.phase === 'lobby')
+            .map(r => ({ roomId: r.id, mapIndex: r.config?.mapIndex, mapName: r.config?.mapName, playerCount: r.playerCount, maxPlayers: r.maxPlayers }));
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ rooms: lobbyRooms }));
     } else if (req.url === '/stats') {
         const mem = process.memoryUsage();
         const activeRooms = Array.from(rooms.rooms.values());
