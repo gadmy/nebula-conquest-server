@@ -333,7 +333,7 @@ handleAction(socket, data) {
     }
 
     // ── Countdown bots ──
-    _startBotCountdown() {
+_startBotCountdown() {
         if (this._countdownStarted) return;
         this._countdownStarted = true;
         let remaining = 30;
@@ -343,8 +343,12 @@ handleAction(socket, data) {
             this.io.to(this.id).emit('bot_countdown', { remaining });
             if (remaining <= 0) {
                 clearInterval(this._countdownTimer);
-                // Lancer la partie — les slots vides seront complétés par IA côté client
-                this._finishSpawn();
+                // Passer par _startSpawn si pas encore fait, sinon _finishSpawn
+                if (this.phase === 'lobby') {
+                    this._startSpawn();
+                } else if (this.phase === 'spawn') {
+                    this._finishSpawn();
+                }
             }
         }, 1000);
     }
