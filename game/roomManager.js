@@ -101,9 +101,13 @@ addPlayer(socket, requestedSlot) {
     }
 
     // ── Phase spawn ──
-    _startSpawn() {
+_startSpawn() {
         if (this.phase !== 'lobby') return;
         this.phase = 'spawn';
+        // Créer immédiatement une nouvelle room en attente pour les prochains joueurs
+        if (this._isAuto && this._manager) {
+            this._manager.createAutoRoom();
+        }
 
         // Créer l'état de jeu avec les joueurs actuels
      // ── Assignation aléatoire des équipes ──
@@ -406,7 +410,8 @@ class RoomManager {
         } else {
             // Créer une nouvelle room
           const roomId = data?.roomId || ('room-' + Date.now() + '-' + Math.floor(Math.random() * 1000));
-           room = new Room(roomId, this.io, this.maxPlayers, this.tickRate, this.supa, this.computeElo);
+room = new Room(roomId, this.io, this.maxPlayers, this.tickRate, this.supa, this.computeElo);
+            room._manager = this;
           if (data?.config) {
                 room.config = { ...room.config, ...data.config };
                 if (data.config.teamCount) room.config.teamCount = parseInt(data.config.teamCount) || 0;
@@ -470,6 +475,30 @@ const slot = room.addPlayer(socket, data?.slot);
         const slot = room.addPlayer(socket);
         socket.roomId = room.id;
         return { roomId: room.id, slot };
+    }
+
+// ── Créer une room auto en attente ──
+    createAutoRoom() {
+        const MAP_LIBRARY = require('./maps');
+        const mapIdx = Math.floor(Math.random() * MAP_LIBRARY.length);
+        const mapName = MAP_LIBRARY[mapIdx].name;
+        const np = MAP_LIBRARY[mapIdx].suns.reduce((a, s) => a + s.planets.length, 0);
+        const maxP = Math.min(50, Math.max(2, np <= 10 ? np : np + 5));
+        const roomId = 'auto-' + Date.now() + '-' + Math.floor(Math.random() * 9999);
+        const room = new Room(roomId, this.io, maxP, this.tickRate, this.supa, this.computeElo);
+        room._isAuto = true;
+        room._manager = this;
+        room.config = {
+            mapIndex: mapIdx,
+            mapName: mapName,
+            sunCount: MAP_LIBRARY[mapIdx].suns.length,
+            aiCount: 0,
+            difficulty: 'normal',
+            mode: 'auto'
+        };
+        this.rooms.set(roomId, room);
+        console.log(`[auto] Room en attente : ${roomId} — ${mapName} (${maxP} joueurs max)`);
+        return { roomId, room };
     }
 
     // ── Liste publique ──
