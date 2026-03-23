@@ -89,8 +89,20 @@ socket.on('join_room',     (data) => {
     });
 socket.on('quick_match', (data) => {
         if (socket.roomId) rooms.leave(socket);
-        const result = rooms.findOrCreate(socket, data?.config || {});
-        socket.emit('room_joined', { roomId: result.roomId, slot: result.slot });
+        // Rejoindre la room auto existante en lobby
+        let autoRoom = null;
+        for (const r of rooms.rooms.values()) {
+            if (r._isAuto && r.phase === 'lobby' && !r.isFull) {
+                autoRoom = r; break;
+            }
+        }
+        if (!autoRoom) {
+            const created = rooms.createAutoRoom();
+            autoRoom = created.room;
+        }
+        const slot = autoRoom.addPlayer(socket);
+        socket.emit('room_joined', { roomId: autoRoom.id, slot });
+        console.log(`[quick_match] ${socket.userName} → room ${autoRoom.id} slot ${slot}`);
     });
     socket.on('leave_room',    ()     => rooms.leave(socket));
     socket.on('player_ready',  (data) => rooms.setReady(socket, data?.ready !== false));
@@ -113,6 +125,7 @@ socket.on('quick_match', (data) => {
 // ── Start ──
 httpServer.listen(PORT, () => {
     console.log(`Nebula Conquest Server — port ${PORT}`);
+    rooms.createAutoRoom();
     console.log(`Supabase : ${supa ? 'connecté' : 'mode dev (pas de vérif JWT)'}`);
     console.log(`Max joueurs/room : ${MAX_PLAYERS} | Tick rate : ${TICK_RATE}Hz`);
 
