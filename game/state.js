@@ -187,7 +187,7 @@ generateUniverse() {
         this.moons = [];
         let bodyId = 0;
         for (const sd of data.suns) {
-            const sun = { ...sd, _id: bodyId++, type: 'sun', planets: [], parent: null, owner: null, spores: 0, maxSpores: 0 };
+           const sun = { ...sd, _id: bodyId++, type: 'sun', planets: [], parent: null, owner: null, spores: 0, maxSpores: 0, color: sd.color || '#FFE44D' };
             for (const pd of sd.planets) {
                 const planet = { ...pd, _id: bodyId++, type: 'planet', parent: sun, moons: [], owner: null, spores: 0, buildMode: 'off', buildProgress: 0, nids: 0, biomes: 0, alveoles: 0 };
                 planet.baseMaxSpores = planet.maxSpores;
