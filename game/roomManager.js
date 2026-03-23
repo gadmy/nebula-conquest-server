@@ -32,8 +32,8 @@ class Room {
     get isFull()      { return this.players.length >= this.maxPlayers; }
     get isEmpty()     { return this.players.length === 0; }
 
-    // ── Ajouter un joueur ──
-addPlayer(socket, requestedSlot) {
+// ── Ajouter un joueur ──
+    addPlayer(socket, requestedSlot) {
         const slot = (requestedSlot !== undefined && requestedSlot >= 0) ? requestedSlot : this.players.length;
         const p = { socket, slot, pseudo: socket.userName, color: socket.userColor, guildTag: socket.guildTag || null, guildId: socket.guildId || null, ready: false, alive: true };
         this.players.push(p);
@@ -44,6 +44,11 @@ addPlayer(socket, requestedSlot) {
         // Informer les autres
         this.io.to(this.id).emit('room_state', this._roomState());
         console.log(`[room:${this.id}] +joueur ${socket.userName} (slot ${slot})`);
+
+        // Démarrer le countdown dès le premier joueur
+        if (this.players.length === 1 && this._isAuto) {
+            this._startBotCountdown();
+        }
         return slot;
     }
 
@@ -336,7 +341,7 @@ handleAction(socket, data) {
 _startBotCountdown() {
         if (this._countdownStarted) return;
         this._countdownStarted = true;
-        let remaining = 30;
+        let remaining = 5;
         this.io.to(this.id).emit('bot_countdown', { remaining });
         this._countdownTimer = setInterval(() => {
             remaining--;
