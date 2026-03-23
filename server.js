@@ -88,8 +88,16 @@ socket.on('join_room',     (data) => {
         }
     });
 socket.on('quick_match', (data) => {
-        if (socket.roomId) rooms.leave(socket);
-        // Rejoindre la room auto existante en lobby
+        // Si déjà dans la room auto en lobby, juste confirmer
+        if (socket.roomId) {
+            const existing = rooms.rooms.get(socket.roomId);
+            if (existing && existing._isAuto && existing.phase === 'lobby') {
+                socket.emit('room_joined', { roomId: existing.id, slot: socket.slot });
+                return;
+            }
+            rooms.leave(socket);
+        }
+        // Chercher LA room auto en attente
         let autoRoom = null;
         for (const r of rooms.rooms.values()) {
             if (r._isAuto && r.phase === 'lobby' && !r.isFull) {
