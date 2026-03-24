@@ -180,20 +180,31 @@ generateUniverse() {
     }
 
 // ── Charger un univers sérialisé (envoyé par l'hôte) ──
-    loadUniverse(data) {
+loadUniverse(data) {
         this.blackHole = data.blackHole;
         this.suns = [];
         this.planets = [];
         this.moons = [];
         let bodyId = 0;
         for (const sd of data.suns) {
-           const sun = { ...sd, _id: bodyId++, type: 'sun', planets: [], parent: null, owner: null, spores: 0, maxSpores: 0, color: sd.color || '#FFE44D' };
+            const sun = { ...sd, _id: bodyId++, type: 'sun', planets: [], parent: null, owner: null, spores: 0, maxSpores: 0, color: sd.color || '#FFE44D' };
+            // Calculer position initiale du soleil
+            sun.x = Math.cos(sun.angle) * sun.orbitRadius;
+            sun.y = Math.sin(sun.angle) * sun.orbitRadius;
             for (const pd of sd.planets) {
                 const planet = { ...pd, _id: bodyId++, type: 'planet', parent: sun, moons: [], owner: null, spores: 0, buildMode: 'off', buildProgress: 0, nids: 0, biomes: 0, alveoles: 0 };
+                planet.maxSpores = planet.maxSpores || planet.radius * 50;
                 planet.baseMaxSpores = planet.maxSpores;
+                // Calculer position initiale de la planète
+                planet.x = sun.x + Math.cos(planet.angle) * planet.orbitRadius;
+                planet.y = sun.y + Math.sin(planet.angle) * planet.orbitRadius;
                 for (const md of (pd.moons || [])) {
                     const moon = { ...md, _id: bodyId++, type: 'moon', parent: planet, owner: null, spores: 0, buildMode: 'off', buildProgress: 0, nids: 0, biomes: 0, alveoles: 0 };
+                    moon.maxSpores = moon.maxSpores || moon.radius * 50;
                     moon.baseMaxSpores = moon.maxSpores;
+                    // Calculer position initiale de la lune
+                    moon.x = planet.x + Math.cos(moon.angle) * moon.orbitRadius;
+                    moon.y = planet.y + Math.sin(moon.angle) * moon.orbitRadius;
                     planet.moons.push(moon);
                     this.moons.push(moon);
                 }
@@ -203,7 +214,7 @@ generateUniverse() {
             this.suns.push(sun);
         }
         this.allBodies = [...this.planets, ...this.moons];
-        console.log(`[state] univers chargé depuis hôte : ${this.suns.length} soleils, ${this.planets.length} planètes, ${this.moons.length} lunes`);
+        console.log(`[state] univers chargé : ${this.suns.length} soleils, ${this.planets.length} planètes, ${this.moons.length} lunes`);
     }
 
     // ── Sérialiser l'univers pour le client ──
