@@ -89,6 +89,7 @@ socket.on('lobby_list',    ()     => socket.emit('lobby_list', rooms.getPublicLi
         }
     });
 socket.on('quick_match', (data) => {
+        console.log(`[quick_match] ${socket.userName} — roomId actuel: ${socket.roomId} — rooms dispo:`, Array.from(rooms.rooms.values()).map(r => `${r.id}(${r.phase})`).join(', '));
         // Si déjà dans la room auto en lobby, juste confirmer
         if (socket.roomId) {
             const existing = rooms.rooms.get(socket.roomId);
