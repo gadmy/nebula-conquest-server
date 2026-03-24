@@ -109,8 +109,14 @@ socket.on('quick_match', (data) => {
             const created = rooms.createAutoRoom();
             autoRoom = created.room;
         }
-        const slot = autoRoom.addPlayer(socket);
-        socket.emit('room_joined', { roomId: autoRoom.id, slot });
+const slot = autoRoom.addPlayer(socket);
+        socket.emit('room_joined', {
+            roomId: autoRoom.id,
+            slot,
+            maxPlayers: autoRoom.maxPlayers,
+            mapIndex: autoRoom.config?.mapIndex ?? 0,
+            mapName: autoRoom.config?.mapName || ''
+        });
         console.log(`[quick_match] ${socket.userName} → room ${autoRoom.id} slot ${slot}`);
     });
    socket.on('join_room', (data) => {
