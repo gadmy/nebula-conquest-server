@@ -113,6 +113,16 @@ socket.on('quick_match', (data) => {
         socket.emit('room_joined', { roomId: autoRoom.id, slot });
         console.log(`[quick_match] ${socket.userName} → room ${autoRoom.id} slot ${slot}`);
     });
+   socket.on('join_room', (data) => {
+        // Rejoindre une room déjà existante (après game_start)
+        if (data?.roomId && rooms.rooms.has(data.roomId)) {
+            const room = rooms.rooms.get(data.roomId);
+            socket.join(data.roomId);
+            socket.roomId = data.roomId;
+            if (data.slot !== undefined) socket.slot = data.slot;
+            console.log(`[join_room] ${socket.userName} → ${data.roomId} slot ${socket.slot}`);
+        }
+    });
     socket.on('leave_room',    ()     => rooms.leave(socket));
     socket.on('player_ready',  (data) => rooms.setReady(socket, data?.ready !== false));
     socket.on('player_action', (data) => rooms.handleAction(socket, data));
