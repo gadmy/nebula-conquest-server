@@ -109,9 +109,11 @@ if (this.isEmpty && !this._isAuto) {
 _startSpawn() {
         if (this.phase !== 'lobby') return;
         this.phase = 'spawn';
-        // Créer immédiatement une nouvelle room en attente pour les prochains joueurs
+// Créer une nouvelle room en attente seulement si aucune n'existe déjà
         if (this._isAuto && this._manager) {
-            this._manager.createAutoRoom();
+            const hasLobby = Array.from(this._manager.rooms.values())
+                .some(r => r._isAuto && r.phase === 'lobby' && r.id !== this.id);
+            if (!hasLobby) this._manager.createAutoRoom();
         }
 
         // Créer l'état de jeu avec les joueurs actuels
@@ -359,10 +361,12 @@ _startBotCountdown() {
     }
 
     // ── Détruire la room ──
-    destroy() {
+destroy() {
         clearInterval(this.tickTimer);
         clearTimeout(this.spawnTimer);
+        clearInterval(this._countdownTimer);
         this.state = null;
+        if (this._manager) this._manager.rooms.delete(this.id);
         console.log(`[room:${this.id}] détruite`);
     }
 
@@ -437,7 +441,11 @@ leave(socket) {
         const room = this.rooms.get(socket.roomId);
         if (!room) return;
         room.removePlayer(socket);
+        // Supprimer les rooms non-auto vides, et les rooms auto en fin de partie
         if (room.isEmpty && !room._isAuto) this.rooms.delete(room.id);
+        if (room.isEmpty && room._isAuto && room.phase !== 'lobby') {
+            room.destroy(); // se supprime lui-même de la map
+        }
     }
 
     // ── Action ──
